@@ -1,0 +1,2 @@
+# This directory holds deployed client applications
+# Structure: {user_id}/{app_name}/{timestamp}/
