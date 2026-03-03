@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eburon AI - Codemax Standby</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0b0f14;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+        }
+
+        /* --- High-Tech Three.js Canvas Container --- */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Scanlines Overlay for High-Tech feel */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom, 
+                rgba(255,255,255,0), 
+                rgba(255,255,255,0) 50%, 
+                rgba(0,0,0,0.2) 50%, 
+                rgba(0,0,0,0.2)
+            );
+            background-size: 100% 4px;
+            z-index: 2;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* Vignette effect */
+        .vignette {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+            z-index: 3;
+            pointer-events: none;
+        }
+
+        /* --- Main Centered Content --- */
+        .main-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            pointer-events: none; 
+        }
+
+        /* HUD style tech frame */
+        .tech-frame {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(11, 15, 20, 0.6);
+            backdrop-filter: blur(12px);
+            padding: 50px 80px;
+            border: 1px solid rgba(64, 152, 185, 0.15);
+            box-shadow: 0 0 40px rgba(0,0,0,0.8), inset 0 0 30px rgba(64, 152, 185, 0.05);
+        }
+
+        /* HUD Corner Brackets */
+        .tech-frame::before, .tech-frame::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-color: #4098b9;
+            border-style: solid;
+            opacity: 0.8;
+            animation: pulseOpacity 3s infinite alternate;
+        }
+        
+        .tech-frame::before {
+            top: -1px; left: -1px;
+            border-width: 2px 0 0 2px;
+        }
+        
+        .tech-frame::after {
+            bottom: -1px; right: -1px;
+            border-width: 0 2px 2px 0;
+        }
+
+        .tech-frame-inner-corners::before, .tech-frame-inner-corners::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-color: #4098b9;
+            border-style: solid;
+            opacity: 0.8;
+            animation: pulseOpacity 3s infinite alternate;
+            animation-delay: 1.5s;
+        }
+
+        .tech-frame-inner-corners::before {
+            top: -1px; right: -1px;
+            border-width: 2px 2px 0 0;
+        }
+
+        .tech-frame-inner-corners::after {
+            bottom: -1px; left: -1px;
+            border-width: 0 0 2px 2px;
+        }
+
+        @keyframes pulseOpacity {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; box-shadow: 0 0 10px rgba(64, 152, 185, 0.5); }
+        }
+
+        .logo-box {
+            width: 72px;
+            height: 72px;
+            background-color: #0b0f14;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            border: 1px solid rgba(64, 152, 185, 0.3);
+            box-shadow: 0 0 25px rgba(64, 152, 185, 0.2);
+            position: relative;
+            animation: coreGlow 4s infinite alternate;
+        }
+
+        @keyframes coreGlow {
+            0% { box-shadow: 0 0 15px rgba(64, 152, 185, 0.1), inset 0 0 10px rgba(64, 152, 185, 0.1); border-color: rgba(64, 152, 185, 0.2); }
+            100% { box-shadow: 0 0 40px rgba(64, 152, 185, 0.4), inset 0 0 20px rgba(64, 152, 185, 0.3); border-color: rgba(64, 152, 185, 0.6); }
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            color: #e2e8f0;
+            text-transform: uppercase;
+        }
+
+        .title span {
+            color: #4098b9;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #788390;
+            margin: 0 0 30px 0;
+            font-weight: 500;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        }
+
+        /* --- Animated Monospace Terminal Text --- */
+        .text-slider {
+            position: relative;
+            height: 24px;
+            width: 100%;
+            min-width: 500px;
+            text-align: center;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid rgba(64, 152, 185, 0.1);
+        }
+
+        .text-slide {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            left: 0;
+            transform: translateY(-50%);
+            font-size: 12px;
+            color: #4098b9;
+            opacity: 0;
+            animation: terminalTyping 16s infinite;
+        }
+
+        .text-slide::before {
+            content: "> ";
+            color: #e2e8f0;
+        }
+
+        /* Staggered animations */
+        .text-slide:nth-child(1) { animation-delay: 0s; }
+        .text-slide:nth-child(2) { animation-delay: 4s; }
+        .text-slide:nth-child(3) { animation-delay: 8s; }
+        .text-slide:nth-child(4) { animation-delay: 12s; }
+
+        @keyframes terminalTyping {
+            0% { opacity: 0; filter: blur(4px); }
+            5% { opacity: 1; filter: blur(0px); }
+            20% { opacity: 1; filter: blur(0px); }
+            25% { opacity: 0; filter: blur(4px); }
+            100% { opacity: 0; }
+        }
+
+        /* Blinking cursor */
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 14px;
+            background-color: #4098b9;
+            vertical-align: middle;
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        /* Status Indicator */
+        .status-indicator {
+            position: absolute;
+            top: -12px;
+            background: #0b0f14;
+            padding: 0 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #4098b9;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background-color: #4098b9;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #4098b9;
+            animation: blink 2s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <div id="canvas-container"></div>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <!-- Main HUD Content -->
+    <div class="main-container">
+        <div class="tech-frame">
+            <div class="tech-frame-inner-corners"></div>
+            
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                SYSTEM STANDBY
+            </div>
+
+            <!-- Custom High-tech animated SVG Logo -->
+            <div class="logo-box">
+                <svg width="40" height="40" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g transform="translate(50, 50) scale(0.85) translate(-50, -50)">
+                        <!-- Spinning dashed outer ring -->
+                        <path d="M50 15 A 35 35 0 1 1 49.9 15" stroke="#4098b9" stroke-width="2" stroke-dasharray="8 6" fill="none" opacity="0.8">
+                            <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="15s" repeatCount="indefinite" />
+                        </path>
+                        <!-- Inner counter-rotating ring -->
+                        <path d="M50 22 A 28 28 0 1 1 49.9 22" stroke="#e2e8f0" stroke-width="1" stroke-dasharray="4 8" fill="none" opacity="0.5">
+                            <animateTransform attributeName="transform" type="rotate" from="360 50 50" to="0 50 50" dur="10s" repeatCount="indefinite" />
+                        </path>
+                        <!-- Triquetra core shape -->
+                        <path d="M50 30 C 65 30, 75 50, 65 65 C 55 80, 45 80, 35 65 C 25 50, 35 30, 50 30 Z" stroke="#e2e8f0" stroke-width="4" stroke-linejoin="round" fill="none"/>
+                        <path d="M50 85 C 30 85, 20 65, 30 50 C 40 35, 60 35, 70 50 C 80 65, 70 85, 50 85 Z" stroke="#e2e8f0" stroke-width="4" stroke-linejoin="round" fill="none"/>
+                        <!-- Pulsing center node -->
+                        <circle cx="50" cy="50" r="5" fill="#4098b9">
+                            <animate attributeName="opacity" values="0.3;1;0.3" dur="1.5s" repeatCount="indefinite" />
+                            <animate attributeName="r" values="4;6;4" dur="1.5s" repeatCount="indefinite" />
+                        </circle>
+                    </g>
+                </svg>
+            </div>
+            
+            <h1 class="title">Eburon <span>Codemax</span></h1>
+            <h2 class="subtitle">Autonomous AI Agent</h2>
+            
+            <!-- Terminal style promotional text animations -->
+            <div class="text-slider">
+                <div class="text-slide">INITIALIZING NEURAL PATHWAYS...<span class="cursor"></span></div>
+                <div class="text-slide">CODEMAX ENGINE ON STANDBY...<span class="cursor"></span></div>
+                <div class="text-slide">AWAITING ARCHITECTURAL PARAMETERS...<span class="cursor"></span></div>
+                <div class="text-slide">READY FOR AUTONOMOUS GENERATION.<span class="cursor"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Three.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // --- Three.js Background Visualization ---
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        scene.fog = new THREE.FogExp2(0x0b0f14, 0.025);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 40;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        container.appendChild(renderer.domElement);
+
+        // Lights
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
+        scene.add(ambientLight);
+
+        const pointLight1 = new THREE.PointLight(0x4098b9, 3, 100);
+        pointLight1.position.set(10, 20, 15);
+        scene.add(pointLight1);
+
+        const pointLight2 = new THREE.PointLight(0x112233, 2, 100);
+        pointLight2.position.set(-15, -20, -10);
+        scene.add(pointLight2);
+
+        // AI Core Main Group
+        const coreGroup = new THREE.Group();
+        scene.add(coreGroup);
+
+        // Advanced Tech Core (Icosahedron)
+        const coreGeo = new THREE.IcosahedronGeometry(8, 1);
+        const coreMat = new THREE.MeshStandardMaterial({ 
+            color: 0x0a1218, 
+            emissive: 0x051520,
+            wireframe: false,
+            flatShading: true
+        });
+        const aiCore = new THREE.Mesh(coreGeo, coreMat);
+        coreGroup.add(aiCore);
+
+        // Inner glowing core
+        const innerGeo = new THREE.IcosahedronGeometry(5, 2);
+        const innerMat = new THREE.MeshBasicMaterial({
+            color: 0x4098b9,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.3
+        });
+        const innerCore = new THREE.Mesh(innerGeo, innerMat);
+        coreGroup.add(innerCore);
+
+        // Holographic Data Rings
+        const rings =[];
+        for(let i=0; i<4; i++) {
+            const ringGeo = new THREE.TorusGeometry(16 + i*4, 0.03, 16, 120);
+            const ringMat = new THREE.MeshBasicMaterial({ 
+                color: 0x4098b9, 
+                transparent: true, 
+                opacity: 0.3 - i*0.06 
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            
+            ring.rotation.x = Math.random() * Math.PI;
+            ring.rotation.y = Math.random() * Math.PI;
+            
+            coreGroup.add(ring);
+            rings.push({
+                mesh: ring,
+                speedX: (Math.random() - 0.5) * 0.005,
+                speedY: (Math.random() - 0.5) * 0.005,
+                speedZ: (Math.random() - 0.5) * 0.005
+            });
+        }
+
+        // Floating Data Particles Field
+        const particlesGeo = new THREE.BufferGeometry();
+        const particleCount = 1500;
+        const posArray = new Float32Array(particleCount * 3);
+
+        for(let i = 0; i < particleCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 200;
+        }
+        particlesGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        
+        const particlesMat = new THREE.PointsMaterial({
+            size: 0.15,
+            color: 0x4098b9,
+            transparent: true,
+            opacity: 0.6,
+            blending: THREE.AdditiveBlending
+        });
+        const particlesMesh = new THREE.Points(particlesGeo, particlesMat);
+        scene.add(particlesMesh);
+
+        // Interactive Parallax
+        let mouseX = 0;
+        let mouseY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+        });
+
+        // Animation Loop
+        const clock = new THREE.Clock();
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = clock.getElapsedTime();
+
+            // Parallax movement
+            const targetX = mouseX * 0.001;
+            const targetY = mouseY * 0.001;
+
+            coreGroup.rotation.y += 0.05 * (targetX - coreGroup.rotation.y);
+            coreGroup.rotation.x += 0.05 * (targetY - coreGroup.rotation.x);
+
+            // Core rotations
+            aiCore.rotation.y += 0.003;
+            aiCore.rotation.x += 0.002;
+            
+            innerCore.rotation.y -= 0.005;
+            innerCore.rotation.z += 0.004;
+            
+            // Emissive pulse on core
+            coreMat.emissiveIntensity = 0.3 + Math.sin(time * 2) * 0.4;
+            innerMat.opacity = 0.2 + Math.sin(time * 3) * 0.2;
+
+            // Spin Rings
+            rings.forEach(ring => {
+                ring.mesh.rotation.x += ring.speedX;
+                ring.mesh.rotation.y += ring.speedY;
+                ring.mesh.rotation.z += ring.speedZ;
+            });
+
+            // Float particles
+            particlesMesh.rotation.y += 0.0005;
+            particlesMesh.rotation.x -= 0.0002;
+
+            // Subtle camera drift
+            camera.position.x += (mouseX * 0.015 - camera.position.x) * 0.05;
+            camera.position.y += (-mouseY * 0.015 - camera.position.y) * 0.05;
+            camera.lookAt(scene.position);
+
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        // Screen Resize Handling
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
